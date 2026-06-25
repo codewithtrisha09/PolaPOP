@@ -1,0 +1,61 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kawaii Gem Photo Booth</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="welcome-body">
+  <div class="sparkle-bg">
+    <span>✦</span><span>✧</span><span>✦</span><span>✧</span><span>✦</span>
+    <span>✧</span><span>✦</span><span>✧</span><span>✦</span><span>✧</span>
+  </div>
+
+  <main class="welcome-wrap">
+    <section class="welcome-card">
+      <div class="badge">Gemz mode activated ✨</div>
+      <h1>Welcome to the cutest photo puzzle booth ever</h1>
+      <p>
+        Click, laugh, retake, sticker, puzzle, and save your silly little masterpiece.
+        Move your mouse anywhere to enter the main booth.
+      </p>
+
+      <div class="floating-gems">
+        <div class="gem g1">💎</div>
+        <div class="gem g2">💗</div>
+        <div class="gem g3">🌸</div>
+        <div class="gem g4">✨</div>
+        <div class="gem g5">🫧</div>
+      </div>
+
+      <div class="hint">Move your mouse to continue.</div>
+    </section>
+
+    <aside class="welcome-side">
+      <div class="mini-card">
+        <div class="mini-title">Today’s mission</div>
+        <div class="mini-text">Take 3–4 funny photos and turn each one into a 3x3 puzzle.</div>
+      </div>
+      <div class="mini-card">
+        <div class="mini-title">Mood</div>
+        <div class="mini-text">Kawaii, sparkly, goofy, and slightly chaotic.</div>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    let moved = false;
+    document.addEventListener("mousemove", () => {
+      if (!moved) {
+        moved = true;
+        document.body.classList.add("fade-out");
+        setTimeout(() => {
+          window.location.href = "/booth";
+        }, 600);
+      }
+    });
+  </script>
+</body>
+</html>

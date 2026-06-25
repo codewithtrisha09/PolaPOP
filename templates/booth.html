@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kawaii Photo Booth</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="booth-body">
+  <header class="topbar">
+    <div>
+      <h1>Kawaii Photo Booth</h1>
+      <p>Capture a photo, choose Retake or Okay, add stickers, then solve the puzzle.</p>
+    </div>
+    <div class="top-actions">
+      <button class="btn ghost" onclick="location.href='/'">Back</button>
+    </div>
+  </header>
+
+  <main class="booth-layout">
+    <section class="cam-panel">
+      <div class="cam-frame">
+        <img src="{{ url_for('video_feed') }}" alt="Live camera">
+      </div>
+
+      <div class="controls">
+        <button class="btn pink" onclick="capturePhoto()">📸 Capture</button>
+        <button class="btn ghost" onclick="resetSession()">Reset</button>
+      </div>
+
+      <div class="sticker-row">
+        <button class="sticker-btn" onclick="pickSticker('💗')">💗</button>
+        <button class="sticker-btn" onclick="pickSticker('✨')">✨</button>
+        <button class="sticker-btn" onclick="pickSticker('🌸')">🌸</button>
+        <button class="sticker-btn" onclick="pickSticker('🫧')">🫧</button>
+        <button class="sticker-btn" onclick="pickSticker('😺')">😺</button>
+      </div>
+
+      <div class="status" id="status">Ready to take a cute picture.</div>
+    </section>
+
+    <aside class="side-panel">
+      <div class="polaroid-stack">
+        <h2>Captured photos</h2>
+        <div id="photoList" class="photo-list"></div>
+      </div>
+
+      <div class="puzzle-area">
+        <h2>Puzzle board</h2>
+        <div id="puzzleBoard" class="puzzle-board"></div>
+      </div>
+
+      <div class="export-area">
+        <button class="btn pink" onclick="exportPDF()">Download PDF</button>
+        <a id="pdfLink" class="pdf-link" href="#" target="_blank" style="display:none;">Open PDF</a>
+      </div>
+    </aside>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <h3>Keep this picture?</h3>
+      <p>Retake it or turn it into a puzzle.</p>
+      <div class="modal-actions">
+        <button class="btn ghost" onclick="retakePhoto()">Retake</button>
+        <button class="btn pink" onclick="okayPhoto()">Okay</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
