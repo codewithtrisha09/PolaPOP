@@ -1,6 +1,4 @@
-* {
-  box-sizing: border-box;
-}
+\* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -162,10 +160,7 @@ body {
 }
 
 @keyframes fadeOut {
-  to {
-    opacity: 0;
-    transform: scale(0.98);
-  }
+  to { opacity: 0; transform: scale(0.98); }
 }
 
 .booth-body {
@@ -237,9 +232,7 @@ body {
   transition: 0.2s ease;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-}
+.btn:hover { transform: translateY(-2px); }
 
 .btn.pink {
   background: linear-gradient(135deg, #ff69ad, #9c82ff);
@@ -313,9 +306,7 @@ body {
   z-index: 10;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .modal-card {
   width: min(420px, 90vw);

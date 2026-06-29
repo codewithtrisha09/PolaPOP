@@ -25,7 +25,7 @@ function retakePhoto() {
 function pickSticker(sticker) {
   selectedSticker = sticker;
   stickerMode = true;
-  document.getElementById("status").textContent = `Sticker selected: ${sticker}. Click a photo to decorate.`;
+  document.getElementById("status").textContent = `Sticker selected: ${sticker}.`;
 }
 
 async function okayPhoto() {
@@ -52,7 +52,6 @@ async function addStickerToPhoto(path, x = 120, y = 120) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       path: path,
-      kind: "emoji",
       text: selectedSticker,
       x: x,
       y: y,
@@ -69,9 +68,8 @@ function addPhotoPreview(path) {
   const img = document.createElement("img");
   img.src = path;
   img.onclick = async () => {
-    if (stickerMode && currentStickerPath) {
+    if (stickerMode) {
       await addStickerToPhoto(path);
-      box.classList.add("shine");
     }
   };
 
@@ -113,7 +111,6 @@ async function renderPuzzle() {
         tile.style.outline = "3px solid #ff69ad";
         return;
       }
-
       await swapTiles(selected, idx);
       selected = null;
     };

@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -21,7 +20,6 @@
         Click, laugh, retake, sticker, puzzle, and save your silly little masterpiece.
         Move your mouse anywhere to enter the main booth.
       </p>
-
       <div class="floating-gems">
         <div class="gem g1">💎</div>
         <div class="gem g2">💗</div>
@@ -29,7 +27,6 @@
         <div class="gem g4">✨</div>
         <div class="gem g5">🫧</div>
       </div>
-
       <div class="hint">Move your mouse to continue.</div>
     </section>
 
@@ -51,9 +48,7 @@
       if (!moved) {
         moved = true;
         document.body.classList.add("fade-out");
-        setTimeout(() => {
-          window.location.href = "/booth";
-        }, 600);
+        setTimeout(() => window.location.href = "/booth", 600);
       }
     });
   </script>

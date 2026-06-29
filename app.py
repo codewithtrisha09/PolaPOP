@@ -14,22 +14,17 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 CAPTURE_DIR = os.path.join(STATIC_DIR, "captures")
 COLLAGE_DIR = os.path.join(STATIC_DIR, "collages")
-STICKER_DIR = os.path.join(STATIC_DIR, "stickers")
 os.makedirs(CAPTURE_DIR, exist_ok=True)
 os.makedirs(COLLAGE_DIR, exist_ok=True)
-os.makedirs(STICKER_DIR, exist_ok=True)
 
 camera = cv2.VideoCapture(0)
 latest_frame = None
 
 session_data = {
     "photos": [],
-    "edited": [],
-    "selected_stickers": {},
+    "stickers": {},
     "current_photo": None,
-    "puzzle_image": None,
-    "puzzle_order": [],
-    "puzzle_solved": False
+    "puzzle": None
 }
 
 def gen_frames():
@@ -47,28 +42,25 @@ def gen_frames():
         yield (b"--frame\r\n"
                b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
 
-def make_pil_preview(path, stickers):
+def public_path_from_abs(abs_path):
+    rel = os.path.relpath(abs_path, BASE_DIR)
+    return "/" + rel.replace("\\", "/")
+
+def make_preview_with_stickers(path, stickers):
     img = Image.open(path).convert("RGBA")
-    w, h = img.size
-    overlay = Image.new("RGBA", (w, h), (255, 255, 255, 0))
+    overlay = Image.new("RGBA", img.size, (255, 255, 255, 0))
     draw = ImageDraw.Draw(overlay)
 
-    for item in stickers:
-        kind = item.get("kind", "emoji")
-        text = item.get("text", "✨")
-        x = int(item.get("x", w // 2))
-        y = int(item.get("y", h // 2))
-        size = int(item.get("size", 64))
-
+    for s in stickers:
+        x = int(s.get("x", 120))
+        y = int(s.get("y", 120))
+        text = s.get("text", "✨")
+        size = int(s.get("size", 64))
         try:
             font = ImageFont.truetype("arial.ttf", size)
         except:
             font = ImageFont.load_default()
-
-        if kind == "emoji":
-            draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
-        elif kind == "text":
-            draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
+        draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
 
     merged = Image.alpha_composite(img, overlay).convert("RGB")
     return merged
@@ -84,16 +76,16 @@ def split_tiles(pil_img, grid=3):
             tiles.append(pil_img.crop(box))
     return tiles
 
-def save_tiles_preview(tiles, order, grid=3):
-    tile_w, tile_h = tiles[0].size
-    canvas_img = Image.new("RGB", (tile_w * grid, tile_h * grid), (255, 240, 247))
-    for idx, tile_index in enumerate(order):
+def save_puzzle_preview(tiles, order, grid=3):
+    tw, th = tiles[0].size
+    board = Image.new("RGB", (tw * grid, th * grid), (255, 240, 247))
+    for idx, tile_idx in enumerate(order):
         r = idx // grid
         c = idx % grid
-        canvas_img.paste(tiles[tile_index], (c * tile_w, r * tile_h))
-    preview_path = os.path.join(COLLAGE_DIR, "puzzle_preview.jpg")
-    canvas_img.save(preview_path)
-    return preview_path
+        board.paste(tiles[tile_idx], (c * tw, r * th))
+    out_path = os.path.join(COLLAGE_DIR, "puzzle_preview.jpg")
+    board.save(out_path)
+    return out_path
 
 @app.route("/")
 def index():
@@ -109,56 +101,56 @@ def video_feed():
 
 @app.route("/capture", methods=["POST"])
 def capture():
-    global latest_frame, session_data
+    global latest_frame
     if latest_frame is None:
-        return jsonify({"ok": False, "msg": "No camera frame yet"})
+        return jsonify({"ok": False, "msg": "No frame available"})
 
-    photo_id = str(uuid.uuid4())[:8]
-    path = os.path.join(CAPTURE_DIR, f"{photo_id}.jpg")
-    cv2.imwrite(path, latest_frame)
+    photo_id = uuid.uuid4().hex[:8]
+    abs_path = os.path.join(CAPTURE_DIR, f"{photo_id}.jpg")
+    cv2.imwrite(abs_path, latest_frame)
 
-    session_data["current_photo"] = "/" + path.replace("\\", "/")
-    session_data["photos"].append(session_data["current_photo"])
-    session_data["selected_stickers"][session_data["current_photo"]] = []
+    public = public_path_from_abs(abs_path)
+    session_data["current_photo"] = public
+    session_data["photos"].append(public)
+    session_data["stickers"][public] = []
 
-    return jsonify({"ok": True, "msg": "Photo captured!", "path": session_data["current_photo"]})
+    return jsonify({"ok": True, "msg": "Photo captured!", "path": public})
 
 @app.route("/add_sticker", methods=["POST"])
 def add_sticker():
     data = request.get_json()
     path = data.get("path")
     sticker = {
-        "kind": data.get("kind", "emoji"),
         "text": data.get("text", "✨"),
-        "x": data.get("x", 100),
-        "y": data.get("y", 100),
+        "x": data.get("x", 120),
+        "y": data.get("y", 120),
         "size": data.get("size", 64)
     }
-    if path not in session_data["selected_stickers"]:
-        session_data["selected_stickers"][path] = []
-    session_data["selected_stickers"][path].append(sticker)
-    return jsonify({"ok": True, "stickers": session_data["selected_stickers"][path]})
+    if path not in session_data["stickers"]:
+        session_data["stickers"][path] = []
+    session_data["stickers"][path].append(sticker)
+    return jsonify({"ok": True, "stickers": session_data["stickers"][path]})
 
 @app.route("/approve_photo", methods=["POST"])
 def approve_photo():
     data = request.get_json()
     path = data.get("path")
     if not path:
-        return jsonify({"ok": False, "msg": "No image path"})
+        return jsonify({"ok": False, "msg": "Missing path"})
 
-    file_path = path.lstrip("/")
-    if not os.path.exists(file_path):
-        return jsonify({"ok": False, "msg": "File not found"})
+    abs_path = os.path.join(BASE_DIR, path.lstrip("/"))
+    if not os.path.exists(abs_path):
+        return jsonify({"ok": False, "msg": "Image not found"})
 
-    stickers = session_data["selected_stickers"].get(path, [])
-    preview = make_pil_preview(file_path, stickers)
-    edited_id = str(uuid.uuid4())[:8]
-    edited_path = os.path.join(CAPTURE_DIR, f"{edited_id}_edited.jpg")
-    preview.save(edited_path)
-    edited_public = "/" + edited_path.replace("\\", "/")
+    stickers = session_data["stickers"].get(path, [])
+    merged = make_preview_with_stickers(abs_path, stickers)
+    edited_name = f"{uuid.uuid4().hex[:8]}_edited.jpg"
+    edited_abs = os.path.join(CAPTURE_DIR, edited_name)
+    merged.save(edited_abs)
 
-    session_data["edited"].append(edited_public)
+    edited_public = public_path_from_abs(edited_abs)
     session_data["current_photo"] = edited_public
+    session_data["photos"].append(edited_public)
 
     return jsonify({"ok": True, "msg": "Approved!", "edited_path": edited_public})
 
@@ -167,37 +159,33 @@ def make_puzzle():
     data = request.get_json()
     path = data.get("path")
     if not path:
-        return jsonify({"ok": False, "msg": "No image path"})
+        return jsonify({"ok": False, "msg": "Missing path"})
 
-    file_path = path.lstrip("/")
-    if not os.path.exists(file_path):
+    abs_path = os.path.join(BASE_DIR, path.lstrip("/"))
+    if not os.path.exists(abs_path):
         return jsonify({"ok": False, "msg": "File not found"})
 
-    img = Image.open(file_path).convert("RGB").resize((600, 600))
+    img = Image.open(abs_path).convert("RGB").resize((600, 600))
     tiles = split_tiles(img, 3)
     order = list(range(9))
     np.random.shuffle(order)
-    preview_path = save_tiles_preview(tiles, order, 3)
 
-    session_data["puzzle_image"] = {
-        "source": path,
+    preview_abs = save_puzzle_preview(tiles, order, 3)
+    preview_public = public_path_from_abs(preview_abs)
+
+    session_data["puzzle"] = {
         "tiles": tiles,
         "order": order,
         "solution": list(range(9)),
-        "preview": "/" + preview_path.replace("\\", "/"),
+        "preview": preview_public,
         "solved": False
     }
 
-    return jsonify({
-        "ok": True,
-        "msg": "Puzzle created!",
-        "preview": session_data["puzzle_image"]["preview"],
-        "order": order
-    })
+    return jsonify({"ok": True, "msg": "Puzzle created!", "preview": preview_public, "order": order})
 
 @app.route("/puzzle_state")
 def puzzle_state():
-    p = session_data.get("puzzle_image")
+    p = session_data.get("puzzle")
     if not p:
         return jsonify({"active": False})
     return jsonify({
@@ -212,11 +200,11 @@ def swap_tile():
     data = request.get_json()
     a = int(data.get("a", -1))
     b = int(data.get("b", -1))
-    p = session_data.get("puzzle_image")
+    p = session_data.get("puzzle")
     if not p:
         return jsonify({"ok": False})
 
-    if a >= 0 and b >= 0 and a < len(p["order"]) and b < len(p["order"]):
+    if 0 <= a < len(p["order"]) and 0 <= b < len(p["order"]):
         p["order"][a], p["order"][b] = p["order"][b], p["order"][a]
 
     solved = p["order"] == p["solution"]
@@ -227,29 +215,27 @@ def swap_tile():
 def export_pdf():
     data = request.get_json()
     images = data.get("images", [])
-    pdf_path = os.path.join(COLLAGE_DIR, f"collage_{uuid.uuid4().hex[:8]}.pdf")
+    pdf_name = f"collage_{uuid.uuid4().hex[:8]}.pdf"
+    pdf_abs = os.path.join(COLLAGE_DIR, pdf_name)
 
-    c = canvas.Canvas(pdf_path, pagesize=A4)
+    c = canvas.Canvas(pdf_abs, pagesize=A4)
     page_w, page_h = A4
-
     c.setTitle("Kawaii Photo Collage")
     c.setFont("Helvetica-Bold", 20)
     c.drawString(40, page_h - 50, "Kawaii Photo Collage")
 
-    x = 40
-    y = page_h - 170
-    box_w = 160
-    box_h = 160
+    x, y = 40, page_h - 200
+    box_w, box_h = 160, 160
     gap = 18
 
-    for idx, img_path in enumerate(images[:4]):
-        file_path = img_path.lstrip("/")
-        if os.path.exists(file_path):
-            img = Image.open(file_path).convert("RGB")
+    for i, img_path in enumerate(images[:4]):
+        abs_img = os.path.join(BASE_DIR, img_path.lstrip("/"))
+        if os.path.exists(abs_img):
+            img = Image.open(abs_img).convert("RGB")
             img = ImageOps.fit(img, (box_w, box_h))
-            temp_path = os.path.join(COLLAGE_DIR, f"tmp_{idx}.jpg")
-            img.save(temp_path)
-            c.drawImage(ImageReader(temp_path), x, y, width=box_w, height=box_h)
+            tmp = os.path.join(COLLAGE_DIR, f"tmp_{i}.jpg")
+            img.save(tmp)
+            c.drawImage(ImageReader(tmp), x, y, width=box_w, height=box_h)
             c.rect(x, y, box_w, box_h)
             x += box_w + gap
             if x + box_w > page_w - 40:
@@ -259,7 +245,7 @@ def export_pdf():
     c.showPage()
     c.save()
 
-    return jsonify({"ok": True, "pdf": "/" + pdf_path.replace("\\", "/")})
+    return jsonify({"ok": True, "pdf": public_path_from_abs(pdf_abs)})
 
 if __name__ == "__main__":
     app.run(debug=True)
