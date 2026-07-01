@@ -64,4 +64,4 @@ PolaPOP/
 - Better puzzle animations
 - Sound effects
 - More collage styles
-- Face-based photo modes
+- Face-based photo mode
