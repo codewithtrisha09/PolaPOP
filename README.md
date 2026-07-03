@@ -1,5 +1,4 @@
 # PolaPOP
-
 A cute computer vision photo booth web app that captures webcam photos, adds stickers, and turns them into a fun image puzzle.
 
 ## Features
