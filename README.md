@@ -49,7 +49,7 @@ PolaPOP/
    python app.py
    ```
 
-3. Open the local server in your browser.
+3. Open the local server in your browser
 
 ## Notes
 
