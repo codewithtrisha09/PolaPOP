@@ -1,24 +1,19 @@
 # PolaPOP
-A cute computer vision photo booth web app that captures webcam photos, adds stickers, and turns them into a fun image puzzle.
+
+PolaPOP is a computer vision–powered photo booth web application. It captures webcam photos, allows sticker customization, and transforms the final image into an interactive puzzle experience.
 
 ## Features
 
 - Live webcam preview
-- Cute welcome screen
-- Photo capture with Retake / Okay flow
-- Sticker support
-- Real image-tile puzzle board
-- PDF export for the final collage
+- Guided capture flow with Retake / Confirm options
+- Sticker overlay support
+- Interactive image-tile puzzle generation
+- PDF export of the final collage
 
 ## Tech Stack
 
-- Python
-- Flask
-- OpenCV
-- Pillow
-- NumPy
-- ReportLab
-- HTML, CSS, JavaScript
+**Backend:** Python, Flask, OpenCV, Pillow, NumPy, ReportLab
+**Frontend:** HTML, CSS, JavaScript
 
 ## Project Structure
 
@@ -37,30 +32,39 @@ PolaPOP/
 │  └─ collages/
 ```
 
-## How to Run
+## Getting Started
 
-1. Install dependencies:
+### Prerequisites
+- Python 3.8+
+- A webcam-enabled device
+
+### Installation
+
+1. Clone the repository and navigate to the project directory.
+
+2. Install dependencies:
    ```bash
    pip install flask opencv-python pillow reportlab numpy
    ```
 
-2. Run the app:
+3. Run the application:
    ```bash
    python app.py
    ```
 
-3. Open the local server in your browser
+4. Open the local server URL displayed in your terminal in a web browser.
 
-## Notes
+## Usage Notes
 
-- Captured images are saved in the `static/captures/` folder.
-- Puzzle tiles are generated from the approved photo.
-- This README will be updated later with screenshots, setup details, and demo info.
+- Captured images are stored in `static/captures/`.
+- Puzzle tiles are generated dynamically from the approved photo.
+- Documentation will be expanded to include screenshots, configuration details, and a demo walkthrough.
 
-## Future Improvements
+## Roadmap
 
-- Drag-and-drop stickers
-- Better puzzle animations
-- Sound effects
-- More collage styles
-- Face-based photo mode
+- Drag-and-drop sticker placement
+- Enhanced puzzle animations and transitions
+- Sound effects and audio feedback
+- Additional collage layout styles
+- Face-detection-based photo mode
+
