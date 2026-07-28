@@ -1,19 +1,20 @@
-# PolaPOP
+# PolaPOP 📸
 
-PolaPOP is a computer vision–powered photo booth web application. It captures webcam photos, allows sticker customization, and transforms the final image into an interactive puzzle experience.
+A computer vision–powered photo booth web app — capture a webcam photo, customize it with stickers, and watch it transform into an interactive image-tile puzzle you can solve and export as a PDF collage.
 
 ## Features
 
-- Live webcam preview
-- Guided capture flow with Retake / Confirm options
-- Sticker overlay support
-- Interactive image-tile puzzle generation
-- PDF export of the final collage
+- **Live webcam preview** with a guided capture flow (Retake / Confirm before committing a shot)
+- **Sticker overlay support** for customizing the final photo
+- **Interactive puzzle generation** — the approved photo is dynamically sliced into image tiles to solve
+- **PDF export** of the final collage using ReportLab
 
 ## Tech Stack
 
-**Backend:** Python, Flask, OpenCV, Pillow, NumPy, ReportLab
-**Frontend:** HTML, CSS, JavaScript
+| Layer | Tools |
+|---|---|
+| Backend | Python, Flask, OpenCV, Pillow, NumPy, ReportLab |
+| Frontend | HTML, CSS, JavaScript |
 
 ## Project Structure
 
@@ -35,36 +36,51 @@ PolaPOP/
 ## Getting Started
 
 ### Prerequisites
+
 - Python 3.8+
 - A webcam-enabled device
 
 ### Installation
 
-1. Clone the repository and navigate to the project directory.
-
+1. Clone the repository and navigate into the project directory:
+```bash
+   git clone https://github.com/codewithtrisha09/PolaPOP.git
+   cd PolaPOP
+```
 2. Install dependencies:
-   ```bash
-   pip install flask opencv-python pillow reportlab numpy
-   ```
-
+```bash
+   pip install -r requirements.txt
+```
+   *(or manually: `pip install flask opencv-python pillow reportlab numpy`)*
 3. Run the application:
-   ```bash
+```bash
    python app.py
-   ```
+```
+4. Open the local server URL shown in your terminal in a web browser.
 
-4. Open the local server URL displayed in your terminal in a web browser.
+## How It Works
+
+1. The webcam preview streams live via OpenCV until you capture a frame
+2. You review the shot with a Retake/Confirm step, then optionally add stickers
+3. The approved image is sliced into tiles server-side to generate a playable puzzle
+4. Once solved (or exported), the final image is compiled into a PDF collage with ReportLab
 
 ## Usage Notes
 
-- Captured images are stored in `static/captures/`.
-- Puzzle tiles are generated dynamically from the approved photo.
-- Documentation will be expanded to include screenshots, configuration details, and a demo walkthrough.
+- Captured images are stored in `static/captures/`
+- Generated collages are stored in `static/collages/`
+- Puzzle tiles are generated dynamically from the approved photo — nothing is pre-baked
 
 ## Roadmap
 
-- Drag-and-drop sticker placement
-- Enhanced puzzle animations and transitions
-- Sound effects and audio feedback
-- Additional collage layout styles
-- Face-detection-based photo mode
+- [ ] Drag-and-drop sticker placement
+- [ ] Enhanced puzzle animations and transitions
+- [ ] Sound effects and audio feedback
+- [ ] Additional collage layout styles
+- [ ] Face-detection-based photo mode
+- [ ] Screenshots and a demo walkthrough in this README
 
+## Author
+
+**Trisha Shetty**
+[GitHub](https://github.com/codewithtrisha09) · [LinkedIn](https://www.linkedin.com/in/trisha-shetty-057a5836a/)
