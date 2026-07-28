@@ -80,7 +80,3 @@ PolaPOP/
 - [ ] Face-detection-based photo mode
 - [ ] Screenshots and a demo walkthrough in this README
 
-## Author
-
-**Trisha Shetty**
-[GitHub](https://github.com/codewithtrisha09) · [LinkedIn](https://www.linkedin.com/in/trisha-shetty-057a5836a/)
