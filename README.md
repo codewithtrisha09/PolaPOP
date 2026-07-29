@@ -1,82 +1,95 @@
-# PolaPOP 📸
+```markdown
+# 📸 PolaPOP
 
-A computer vision–powered photo booth web app — capture a webcam photo, customize it with stickers, and watch it transform into an interactive image-tile puzzle you can solve and export as a PDF collage.
+A kawaii-themed webcam photo booth built with Flask + OpenCV — capture photos, sticker them up, turn them into polaroids, solve a drag-and-drop photo puzzle, and export a printable PDF collage.
 
-## Features
+![Status](https://img.shields.io/badge/status-active-brightgreen)
+![Python](https://img.shields.io/badge/python-3.10-blue)
+![Flask](https://img.shields.io/badge/flask-3.x-black)
 
-- **Live webcam preview** with a guided capture flow (Retake / Confirm before committing a shot)
-- **Sticker overlay support** for customizing the final photo
-- **Interactive puzzle generation** — the approved photo is dynamically sliced into image tiles to solve
-- **PDF export** of the final collage using ReportLab
+## ✨ Features
 
-## Tech Stack
+- **Live webcam feed** streamed via Flask (MJPEG) using OpenCV
+- **Capture → Retake / Approve** flow with a confirmation modal
+- **Sticker overlay** — pick an emoji sticker, click anywhere on a captured photo to stamp it
+- **Polaroid export** — wraps any captured photo in a classic white-border polaroid frame with an optional caption, generated server-side with Pillow
+- **Photo puzzle** — approved photos are auto-sliced into a 3×3 grid of *real image tiles* (not placeholders) and shuffled
+- **Drag-and-drop puzzle solving** — native HTML5 drag events, no click-to-select
+- **PDF export** — bundles up to 4 captured photos into a printable collage PDF via ReportLab
+- **Session reset** — clear photos, puzzle state, and captures to start fresh
 
-| Layer | Tools |
-|---|---|
-| Backend | Python, Flask, OpenCV, Pillow, NumPy, ReportLab |
-| Frontend | HTML, CSS, JavaScript |
+## 🛠️ Tech Stack
 
-## Project Structure
+- **Backend:** Flask, OpenCV (`cv2`), NumPy, Pillow, ReportLab
+- **Frontend:** Vanilla JS, HTML5 Drag & Drop API, CSS Grid
+- **No database** — session state is kept in-memory (`session_data` dict) for simplicity
 
-```text
-PolaPOP/
-├─ app.py
-├─ requirements.txt
-├─ README.md
-├─ templates/
-│  ├─ index.html
-│  └─ booth.html
-├─ static/
-│  ├─ style.css
-│  ├─ main.js
-│  ├─ captures/
-│  └─ collages/
+## 📁 Project Structure
+
 ```
 
-## Getting Started
+PolaPop_puzzle/
+├── app.py
+├── static/
+│   ├── main.js
+│   ├── style.css
+│   ├── captures/
+│   ├── collages/
+│   └── polaroids/
+└── templates/
+    ├── index.html
+    └── booth.html
+
+````
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
-- Python 3.8+
-- A webcam-enabled device
+- Python 3.10+
+- A working webcam
 
 ### Installation
 
-1. Clone the repository and navigate into the project directory:
 ```bash
-   git clone https://github.com/codewithtrisha09/PolaPOP.git
-   cd PolaPOP
-```
-2. Install dependencies:
+git clone https://github.com/codewithtrisha09/PolaPOP.git
+cd PolaPOP
+
+pip install flask opencv-python numpy pillow reportlab
+````
+
+### Run
+
 ```bash
-   pip install -r requirements.txt
+python app.py
 ```
-   *(or manually: `pip install flask opencv-python pillow reportlab numpy`)*
-3. Run the application:
-```bash
-   python app.py
+
+Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)** in your browser. Move your mouse on the welcome screen to enter the booth.
+
+> ⚠️ Close any other app (Zoom, Teams, Windows Camera) using your webcam first — `cv2.VideoCapture(0)` can't share the camera.
+
+## 🎮 How to Use
+
+1. Land on the welcome screen, move your mouse to enter the booth
+2. Click **📸 Capture** to take a photo
+3. In the confirmation modal, choose:
+   - **Retake** — discard and try again
+   - **Okay** — approve the photo, which auto-generates a 3×3 puzzle
+   - **🖼️ Polaroid** — frame the photo as a polaroid with an optional caption
+4. Pick a sticker and click on any captured photo to stamp it
+5. Drag and drop puzzle tiles to reassemble the photo
+6. Click **Download PDF** to export your captured photos as a collage
+
+## 🔮 Roadmap
+
+- [ ] Random tile rotation for a "tossed on a table" polaroid look
+- [ ] Stack/fan layout for the photo list instead of a grid
+- [ ] Configurable puzzle grid size (4×4, 5×5)
+- [ ] Deploy-ready config (env-based camera index, production WSGI server)
+
+## 📄 License
+
+MIT
+
 ```
-4. Open the local server URL shown in your terminal in a web browser.
 
-## How It Works
-
-1. The webcam preview streams live via OpenCV until you capture a frame
-2. You review the shot with a Retake/Confirm step, then optionally add stickers
-3. The approved image is sliced into tiles server-side to generate a playable puzzle
-4. Once solved (or exported), the final image is compiled into a PDF collage with ReportLab
-
-## Usage Notes
-
-- Captured images are stored in `static/captures/`
-- Generated collages are stored in `static/collages/`
-- Puzzle tiles are generated dynamically from the approved photo — nothing is pre-baked
-
-## Roadmap
-
-- [ ] Drag-and-drop sticker placement
-- [ ] Enhanced puzzle animations and transitions
-- [ ] Sound effects and audio feedback
-- [ ] Additional collage layout styles
-- [ ] Face-detection-based photo mode
-- [ ] Screenshots and a demo walkthrough in this README
-
+Want me to also add a live-demo GIF placeholder or badges linking to your actual repo/issues once it's pushed?
