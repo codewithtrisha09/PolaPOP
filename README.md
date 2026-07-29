@@ -1,4 +1,3 @@
-
 # 📸 PolaPOP
 
 A kawaii-themed webcam photo booth built with Flask + OpenCV — capture photos, sticker them up, turn them into polaroids, solve a drag-and-drop photo puzzle, and export a printable PDF collage.
