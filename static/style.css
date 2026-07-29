@@ -1,4 +1,4 @@
-\* { box-sizing: border-box; }
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -206,6 +206,7 @@ body {
   overflow: hidden;
   border: 3px solid #ffd3ea;
   background: #fff;
+  line-height: 0;
 }
 
 .cam-frame img {
@@ -269,32 +270,63 @@ body {
   gap: 18px;
 }
 
-.photo-list,
-.puzzle-board {
+.photo-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
 }
 
+/* Puzzle tiles sit flush against each other so real photo slices line up
+   with no gap — a gap here was the "white line" between pieces. */
+.puzzle-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #f0dff4;
+}
+
 .photo-item,
 .tile {
   aspect-ratio: 1;
-  border-radius: 16px;
   background: linear-gradient(135deg, #ffe2f0, #ece7ff);
   display: grid;
   place-items: center;
   font-family: "Fredoka", sans-serif;
   font-size: 1.4rem;
   color: #644a7b;
-  cursor: pointer;
   user-select: none;
   overflow: hidden;
+}
+
+.photo-item {
+  border-radius: 16px;
+  cursor: pointer;
 }
 
 .photo-item img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.tile {
+  background-repeat: no-repeat;
+  cursor: grab;
+  transition: outline 0.15s ease, opacity 0.15s ease;
+  outline: 1px solid rgba(255, 255, 255, 0.6);
+  outline-offset: -1px;
+}
+
+.tile.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.tile.drag-over {
+  outline: 3px solid #ff69ad;
+  outline-offset: -3px;
 }
 
 .modal {

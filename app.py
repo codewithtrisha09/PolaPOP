@@ -14,8 +14,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 CAPTURE_DIR = os.path.join(STATIC_DIR, "captures")
 COLLAGE_DIR = os.path.join(STATIC_DIR, "collages")
+POLAROID_DIR = os.path.join(STATIC_DIR, "polaroids")
 os.makedirs(CAPTURE_DIR, exist_ok=True)
 os.makedirs(COLLAGE_DIR, exist_ok=True)
+os.makedirs(POLAROID_DIR, exist_ok=True)
 
 camera = cv2.VideoCapture(0)
 latest_frame = None
@@ -26,6 +28,7 @@ session_data = {
     "current_photo": None,
     "puzzle": None
 }
+
 
 def gen_frames():
     global latest_frame
@@ -42,9 +45,23 @@ def gen_frames():
         yield (b"--frame\r\n"
                b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
 
+
 def public_path_from_abs(abs_path):
     rel = os.path.relpath(abs_path, BASE_DIR)
     return "/" + rel.replace("\\", "/")
+
+
+def load_font(size):
+    try:
+        return ImageFont.truetype("arial.ttf", size)
+    except Exception:
+        try:
+            return ImageFont.truetype(
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", size
+            )
+        except Exception:
+            return ImageFont.load_default()
+
 
 def make_preview_with_stickers(path, stickers):
     img = Image.open(path).convert("RGBA")
@@ -56,14 +73,42 @@ def make_preview_with_stickers(path, stickers):
         y = int(s.get("y", 120))
         text = s.get("text", "✨")
         size = int(s.get("size", 64))
-        try:
-            font = ImageFont.truetype("arial.ttf", size)
-        except:
-            font = ImageFont.load_default()
+        font = load_font(size)
         draw.text((x, y), text, font=font, fill=(255, 255, 255, 255))
 
     merged = Image.alpha_composite(img, overlay).convert("RGB")
     return merged
+
+
+def make_polaroid(path, caption=""):
+    img = Image.open(path).convert("RGB")
+
+    target_w = 600
+    ratio = target_w / img.width
+    img = img.resize((target_w, int(img.height * ratio)))
+
+    border = 28
+    bottom_strip = 110
+
+    frame_w = img.width + border * 2
+    frame_h = img.height + border + bottom_strip
+
+    frame = Image.new("RGB", (frame_w, frame_h), (255, 255, 255))
+    frame.paste(img, (border, border))
+
+    draw = ImageDraw.Draw(frame)
+    if caption:
+        font = load_font(28)
+        text_w = draw.textlength(caption, font=font)
+        text_x = (frame_w - text_w) / 2
+        text_y = img.height + border + (bottom_strip - 28) / 2
+        draw.text((text_x, text_y), caption, font=font, fill=(70, 55, 80))
+
+    out_name = f"{uuid.uuid4().hex[:8]}_polaroid.jpg"
+    out_abs = os.path.join(POLAROID_DIR, out_name)
+    frame.save(out_abs, quality=92)
+    return out_abs
+
 
 def split_tiles(pil_img, grid=3):
     w, h = pil_img.size
@@ -76,6 +121,7 @@ def split_tiles(pil_img, grid=3):
             tiles.append(pil_img.crop(box))
     return tiles
 
+
 def save_puzzle_preview(tiles, order, grid=3):
     tw, th = tiles[0].size
     board = Image.new("RGB", (tw * grid, th * grid), (255, 240, 247))
@@ -87,17 +133,21 @@ def save_puzzle_preview(tiles, order, grid=3):
     board.save(out_path)
     return out_path
 
+
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/booth")
 def booth():
     return render_template("booth.html")
 
+
 @app.route("/video_feed")
 def video_feed():
     return Response(gen_frames(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
 
 @app.route("/capture", methods=["POST"])
 def capture():
@@ -116,6 +166,7 @@ def capture():
 
     return jsonify({"ok": True, "msg": "Photo captured!", "path": public})
 
+
 @app.route("/add_sticker", methods=["POST"])
 def add_sticker():
     data = request.get_json()
@@ -130,6 +181,7 @@ def add_sticker():
         session_data["stickers"][path] = []
     session_data["stickers"][path].append(sticker)
     return jsonify({"ok": True, "stickers": session_data["stickers"][path]})
+
 
 @app.route("/approve_photo", methods=["POST"])
 def approve_photo():
@@ -154,6 +206,26 @@ def approve_photo():
 
     return jsonify({"ok": True, "msg": "Approved!", "edited_path": edited_public})
 
+
+@app.route("/make_polaroid", methods=["POST"])
+def make_polaroid_route():
+    data = request.get_json()
+    path = data.get("path")
+    caption = data.get("caption", "")
+
+    if not path:
+        return jsonify({"ok": False, "msg": "Missing path"})
+
+    abs_path = os.path.join(BASE_DIR, path.lstrip("/"))
+    if not os.path.exists(abs_path):
+        return jsonify({"ok": False, "msg": "Image not found"})
+
+    out_abs = make_polaroid(abs_path, caption)
+    out_public = public_path_from_abs(out_abs)
+
+    return jsonify({"ok": True, "msg": "Polaroid ready!", "path": out_public})
+
+
 @app.route("/make_puzzle", methods=["POST"])
 def make_puzzle():
     data = request.get_json()
@@ -166,6 +238,12 @@ def make_puzzle():
         return jsonify({"ok": False, "msg": "File not found"})
 
     img = Image.open(abs_path).convert("RGB").resize((600, 600))
+
+    base_name = f"{uuid.uuid4().hex[:8]}_puzzlebase.jpg"
+    base_abs = os.path.join(CAPTURE_DIR, base_name)
+    img.save(base_abs, quality=92)
+    base_public = public_path_from_abs(base_abs)
+
     tiles = split_tiles(img, 3)
     order = list(range(9))
     np.random.shuffle(order)
@@ -178,10 +256,18 @@ def make_puzzle():
         "order": order,
         "solution": list(range(9)),
         "preview": preview_public,
+        "base": base_public,
         "solved": False
     }
 
-    return jsonify({"ok": True, "msg": "Puzzle created!", "preview": preview_public, "order": order})
+    return jsonify({
+        "ok": True,
+        "msg": "Puzzle created!",
+        "preview": preview_public,
+        "base": base_public,
+        "order": order
+    })
+
 
 @app.route("/puzzle_state")
 def puzzle_state():
@@ -192,8 +278,10 @@ def puzzle_state():
         "active": True,
         "order": p["order"],
         "preview": p["preview"],
+        "base": p["base"],
         "solved": p["solved"]
     })
+
 
 @app.route("/swap_tile", methods=["POST"])
 def swap_tile():
@@ -210,6 +298,7 @@ def swap_tile():
     solved = p["order"] == p["solution"]
     p["solved"] = solved
     return jsonify({"ok": True, "solved": solved, "order": p["order"]})
+
 
 @app.route("/export_pdf", methods=["POST"])
 def export_pdf():
@@ -246,6 +335,7 @@ def export_pdf():
     c.save()
 
     return jsonify({"ok": True, "pdf": public_path_from_abs(pdf_abs)})
+
 
 if __name__ == "__main__":
     app.run(debug=True)
