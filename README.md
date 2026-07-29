@@ -86,10 +86,3 @@ Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)** in your browser. Move yo
 - [ ] Configurable puzzle grid size (4×4, 5×5)
 - [ ] Deploy-ready config (env-based camera index, production WSGI server)
 
-## 📄 License
-
-MIT
-
-```
-
-Want me to also add a live-demo GIF placeholder or badges linking to your actual repo/issues once it's pushed?
