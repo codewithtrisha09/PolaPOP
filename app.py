@@ -15,9 +15,11 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 CAPTURE_DIR = os.path.join(STATIC_DIR, "captures")
 COLLAGE_DIR = os.path.join(STATIC_DIR, "collages")
 POLAROID_DIR = os.path.join(STATIC_DIR, "polaroids")
+STRIP_DIR = os.path.join(STATIC_DIR, "strips")
 os.makedirs(CAPTURE_DIR, exist_ok=True)
 os.makedirs(COLLAGE_DIR, exist_ok=True)
 os.makedirs(POLAROID_DIR, exist_ok=True)
+os.makedirs(STRIP_DIR, exist_ok=True)
 
 camera = cv2.VideoCapture(0)
 latest_frame = None
@@ -106,6 +108,46 @@ def make_polaroid(path, caption=""):
 
     out_name = f"{uuid.uuid4().hex[:8]}_polaroid.jpg"
     out_abs = os.path.join(POLAROID_DIR, out_name)
+    frame.save(out_abs, quality=92)
+    return out_abs
+
+
+def make_strip(abs_paths, caption=""):
+    border = 24
+    gap = 14
+    strip_w = 480
+    bottom_strip = 90
+
+    imgs = []
+    for p in abs_paths[:4]:
+        img = Image.open(p).convert("RGB")
+        ratio = strip_w / img.width
+        img = img.resize((strip_w, int(img.height * ratio)))
+        imgs.append(img)
+
+    if not imgs:
+        return None
+
+    content_h = sum(im.height for im in imgs) + gap * (len(imgs) - 1)
+    frame_w = strip_w + border * 2
+    frame_h = content_h + border * 2 + bottom_strip
+
+    frame = Image.new("RGB", (frame_w, frame_h), (255, 255, 255))
+    y = border
+    for im in imgs:
+        frame.paste(im, (border, y))
+        y += im.height + gap
+
+    draw = ImageDraw.Draw(frame)
+    if caption:
+        font = load_font(26)
+        text_w = draw.textlength(caption, font=font)
+        text_x = (frame_w - text_w) / 2
+        text_y = content_h + border + (bottom_strip - 26) / 2
+        draw.text((text_x, text_y), caption, font=font, fill=(70, 55, 80))
+
+    out_name = f"{uuid.uuid4().hex[:8]}_strip.jpg"
+    out_abs = os.path.join(STRIP_DIR, out_name)
     frame.save(out_abs, quality=92)
     return out_abs
 
@@ -224,6 +266,29 @@ def make_polaroid_route():
     out_public = public_path_from_abs(out_abs)
 
     return jsonify({"ok": True, "msg": "Polaroid ready!", "path": out_public})
+
+
+@app.route("/make_strip", methods=["POST"])
+def make_strip_route():
+    data = request.get_json()
+    images = data.get("images", [])
+    caption = data.get("caption", "")
+
+    abs_paths = []
+    for img_path in images[:4]:
+        abs_img = os.path.join(BASE_DIR, img_path.lstrip("/"))
+        if os.path.exists(abs_img):
+            abs_paths.append(abs_img)
+
+    if len(abs_paths) < 1:
+        return jsonify({"ok": False, "msg": "No valid photos to strip"})
+
+    out_abs = make_strip(abs_paths, caption)
+    if out_abs is None:
+        return jsonify({"ok": False, "msg": "Strip generation failed"})
+
+    out_public = public_path_from_abs(out_abs)
+    return jsonify({"ok": True, "msg": "Strip ready!", "path": out_public})
 
 
 @app.route("/make_puzzle", methods=["POST"])
