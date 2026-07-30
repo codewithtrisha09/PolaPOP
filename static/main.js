@@ -99,6 +99,30 @@ async function makePolaroid(path) {
   }
 }
 
+async function makeStrip() {
+  if (capturedPhotos.length < 1) {
+    document.getElementById("status").textContent = "Capture at least 1 photo first!";
+    return;
+  }
+
+  const caption = prompt("Caption for your strip (optional):", "") || "";
+
+  const res = await fetch("/make_strip", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ images: capturedPhotos.slice(0, 4), caption })
+  });
+
+  const data = await res.json();
+  if (data.ok) {
+    document.getElementById("status").textContent = "Strip ready!";
+    addPhotoPreview(data.path);
+    window.open(data.path, "_blank");
+  } else {
+    document.getElementById("status").textContent = data.msg || "Strip failed.";
+  }
+}
+
 async function renderPuzzleFromApproved() {
   const res = await fetch("/make_puzzle", {
     method: "POST",
